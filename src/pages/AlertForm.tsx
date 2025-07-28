@@ -43,6 +43,7 @@ const AlertForm: React.FC = () => {
       // For now, use mock data
       const mockAlert: Alert = {
         id: '1',
+        dashboardId: '1',
         ruleName: 'SQL Injection Detection',
         description: 'Detects potential SQL injection attempts in web requests',
         impact: 'Could lead to database compromise and data theft',
@@ -50,7 +51,7 @@ const AlertForm: React.FC = () => {
         falsePositiveCheck: 'Verify the request contains actual SQL injection patterns',
         severity: 'Critical',
         tags: ['web', 'database', 'injection'],
-        createdBy: 'admin',
+        createdBy: { id: '1', username: 'admin', email: 'admin@alertflow.com', role: 'admin', createdAt: '2024-01-01T00:00:00Z' },
         createdAt: '2024-01-15T10:30:00Z',
         updatedAt: '2024-01-15T10:30:00Z',
       };

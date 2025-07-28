@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import AlertFlowDashboard from "./pages/AlertFlowDashboard";
 import AlertForm from "./pages/AlertForm";
 import AlertDetail from "./pages/AlertDetail";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,16 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/dashboards" element={
+              <ProtectedRoute>
+                <AlertFlowDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboards/:id" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

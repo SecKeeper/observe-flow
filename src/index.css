@@ -8,7 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 220 13% 98%;
+    /* Security-themed AlertFlow design system */
+    --background: 220 20% 98%;
     --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
@@ -17,7 +18,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    --primary: 217 91% 60%;
+    /* Security blue primary */
+    --primary: 220 90% 25%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 220 13% 95%;
@@ -26,18 +28,22 @@ All colors MUST be HSL.
     --muted: 220 13% 95%;
     --muted-foreground: 220 8% 46%;
 
-    --accent: 142 76% 36%;
+    --accent: 220 90% 35%;
     --accent-foreground: 0 0% 98%;
 
+    /* Critical severity - Red */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 15% 15%;
+    /* High severity - Orange */
+    --warning: 25 95% 53%;
+    --warning-foreground: 0 0% 98%;
 
-    --info: 199 89% 48%;
+    /* Medium severity - Blue */
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 98%;
 
+    /* Low severity - Green */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 98%;
 
@@ -65,29 +71,43 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark security theme */
+    --background: 220 25% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 220 20% 12%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 220 20% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 25% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 220 15% 18%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 220 15% 18%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 220 25% 8%;
 
-    --destructive: 0 62.8% 30.6%;
+    /* Critical severity - Red (dark mode) */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
+
+    /* High severity - Orange (dark mode) */
+    --warning: 25 95% 53%;
+    --warning-foreground: 220 25% 8%;
+
+    /* Medium severity - Blue (dark mode) */
+    --info: 217 91% 60%;
+    --info-foreground: 220 25% 8%;
+
+    /* Low severity - Green (dark mode) */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;

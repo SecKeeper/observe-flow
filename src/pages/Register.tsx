@@ -77,7 +77,7 @@ const Register: React.FC = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>
-            Join AlertFlow to manage your security alerts
+            Join AlertFlow to manage security alerts and collaborate with your team
           </CardDescription>
         </CardHeader>
         <CardContent>

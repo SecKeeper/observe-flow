@@ -28,6 +28,7 @@ const AlertDetail: React.FC = () => {
         // For demo purposes, use mock data
         const mockAlert: Alert = {
           id: id || '1',
+          dashboardId: '1',
           ruleName: 'SQL Injection Detection',
           description: 'This alert monitors web application traffic for patterns that indicate SQL injection attempts. It analyzes HTTP request parameters, form data, and URL parameters for common SQL injection signatures including UNION SELECT statements, comment sequences, and time-based blind injection patterns.',
           impact: 'A successful SQL injection attack could lead to unauthorized database access, data exfiltration, data manipulation, or complete database compromise. Attackers may be able to bypass authentication, escalate privileges, or gain administrative access to the application and underlying database server.',
@@ -36,7 +37,7 @@ const AlertDetail: React.FC = () => {
           severity: 'Critical',
           tags: ['web', 'database', 'injection', 'owasp-top10'],
           fileUrl: '/uploads/sql-injection-samples.pcap',
-          createdBy: 'security_admin',
+          createdBy: { id: '1', username: 'security_admin', email: 'admin@alertflow.com', role: 'admin', createdAt: '2024-01-01T00:00:00Z' },
           createdAt: '2024-01-15T10:30:00Z',
           updatedAt: '2024-01-20T14:45:00Z',
         };
@@ -176,7 +177,7 @@ const AlertDetail: React.FC = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Created By</p>
-                    <p className="text-sm text-muted-foreground">{alert.createdBy}</p>
+                    <p className="text-sm text-muted-foreground">{alert.createdBy.username}</p>
                   </div>
                 </div>
 
