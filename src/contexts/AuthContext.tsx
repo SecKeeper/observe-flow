@@ -47,24 +47,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      // Mock authentication - accepts any username/password for testing
+      if (username && password) {
         const userData = {
-          id: data.user_id || '1',
-          username: data.username || username,
-          role: data.role || 'user',
+          id: '1',
+          username: username,
+          role: 'user',
         };
         
         setUser(userData);
-        localStorage.setItem('auth_token', data.token || 'mock_token');
+        localStorage.setItem('auth_token', 'mock_token_' + Date.now());
         localStorage.setItem('user_data', JSON.stringify(userData));
         return true;
       }
