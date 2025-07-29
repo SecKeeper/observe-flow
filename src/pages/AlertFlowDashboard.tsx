@@ -59,6 +59,7 @@ const AlertFlowDashboard: React.FC = () => {
       id: '1',
       dashboardId: '1',
       ruleName: 'SQL Injection Detection',
+      shortDescription: 'Detects SQL injection attempts in web traffic',
       description: 'Detects potential SQL injection attempts in web application traffic',
       impact: 'Could lead to database compromise and sensitive data exposure',
       mitigation: 'Implement input validation, parameterized queries, and WAF rules',
@@ -74,6 +75,7 @@ const AlertFlowDashboard: React.FC = () => {
       id: '2',
       dashboardId: '1',
       ruleName: 'Cross-Site Scripting (XSS)',
+      shortDescription: 'Identifies XSS attacks in web applications',
       description: 'Identifies reflected and stored XSS attacks in web applications',
       impact: 'Session hijacking, credential theft, defacement, malware distribution',
       mitigation: 'Implement content security policy, input encoding, and output validation',
@@ -88,6 +90,7 @@ const AlertFlowDashboard: React.FC = () => {
       id: '3',
       dashboardId: '2',
       ruleName: 'Brute Force Login Attempts',
+      shortDescription: 'Detects multiple failed login attempts',
       description: 'Detects multiple failed login attempts from the same source IP',
       impact: 'Unauthorized access to user accounts and potential data breach',
       mitigation: 'Implement account lockout policies, CAPTCHA, and rate limiting',
@@ -102,6 +105,7 @@ const AlertFlowDashboard: React.FC = () => {
       id: '4',
       dashboardId: '2',
       ruleName: 'Port Scan Detection',
+      shortDescription: 'Identifies network reconnaissance activities',
       description: 'Identifies network reconnaissance activities and port scanning',
       impact: 'Information gathering for potential network attacks',
       mitigation: 'Block suspicious IPs, implement network segmentation, monitor firewall logs',
@@ -116,6 +120,7 @@ const AlertFlowDashboard: React.FC = () => {
       id: '5',
       dashboardId: '3',
       ruleName: 'Malware Download Detected',
+      shortDescription: 'Suspicious file downloads detected',
       description: 'Suspicious file downloads potentially containing malware',
       impact: 'System compromise, data theft, lateral movement within network',
       mitigation: 'Quarantine affected systems, run full antivirus scans, update signatures',
@@ -163,6 +168,7 @@ const AlertFlowDashboard: React.FC = () => {
       filtered = filtered.filter(alert =>
         alert.ruleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alert.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        alert.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alert.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -302,7 +308,7 @@ const AlertFlowDashboard: React.FC = () => {
                           <div className="space-y-1">
                             <div>{alert.ruleName}</div>
                             <div className="text-sm text-muted-foreground line-clamp-1">
-                              {alert.description}
+                              {alert.shortDescription}
                             </div>
                           </div>
                         </TableCell>

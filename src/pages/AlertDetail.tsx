@@ -30,6 +30,7 @@ const AlertDetail: React.FC = () => {
           id: id || '1',
           dashboardId: '1',
           ruleName: 'SQL Injection Detection',
+          shortDescription: 'Detects SQL injection attempts in web traffic',
           description: 'This alert monitors web application traffic for patterns that indicate SQL injection attempts. It analyzes HTTP request parameters, form data, and URL parameters for common SQL injection signatures including UNION SELECT statements, comment sequences, and time-based blind injection patterns.',
           impact: 'A successful SQL injection attack could lead to unauthorized database access, data exfiltration, data manipulation, or complete database compromise. Attackers may be able to bypass authentication, escalate privileges, or gain administrative access to the application and underlying database server.',
           mitigation: 'Immediately implement parameterized queries and prepared statements for all database interactions. Validate and sanitize all user input on both client and server sides. Apply the principle of least privilege to database connections. Enable Web Application Firewall (WAF) rules to block common injection patterns. Conduct regular security code reviews and penetration testing.',

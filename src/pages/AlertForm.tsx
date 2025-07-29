@@ -45,6 +45,7 @@ const AlertForm: React.FC = () => {
         id: '1',
         dashboardId: '1',
         ruleName: 'SQL Injection Detection',
+        shortDescription: 'Detects SQL injection attempts in web traffic',
         description: 'Detects potential SQL injection attempts in web requests',
         impact: 'Could lead to database compromise and data theft',
         mitigation: 'Implement input validation and parameterized queries',

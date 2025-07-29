@@ -36,6 +36,7 @@ export interface Alert {
   id: string;
   dashboardId: string;
   ruleName: string;
+  shortDescription: string;
   description: string;
   impact: string;
   mitigation: string;
