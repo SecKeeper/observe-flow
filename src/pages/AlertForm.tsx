@@ -140,7 +140,7 @@ const AlertForm: React.FC = () => {
         description: `The alert has been successfully ${isEditing ? 'updated' : 'created'}.`,
       });
 
-      navigate('/dashboard');
+      navigate('/dashboards');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -166,7 +166,7 @@ const AlertForm: React.FC = () => {
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={() => navigate('/dashboard')}>
+          <Button variant="outline" onClick={() => navigate('/dashboards')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -296,7 +296,7 @@ const AlertForm: React.FC = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/dashboards')}
                 >
                   Cancel
                 </Button>

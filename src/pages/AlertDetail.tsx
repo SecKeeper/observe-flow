@@ -87,7 +87,7 @@ const AlertDetail: React.FC = () => {
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-4">Alert Not Found</h2>
           <p className="text-muted-foreground mb-6">The requested alert could not be found.</p>
-          <Button onClick={() => navigate('/dashboard')}>
+          <Button onClick={() => navigate('/dashboards')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -101,7 +101,7 @@ const AlertDetail: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+            <Button variant="outline" onClick={() => navigate('/dashboards')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>

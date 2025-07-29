@@ -32,6 +32,11 @@ const App = () => (
                 <AlertFlowDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <AlertFlowDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboards/:id" element={
               <ProtectedRoute>
                 <Dashboard />
