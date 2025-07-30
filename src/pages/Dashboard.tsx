@@ -21,8 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import SeverityBadge from '@/components/SeverityBadge';
 import Layout from '@/components/Layout';
+import InviteUsersModal from '@/components/InviteUsersModal';
 import { Alert } from '@/types';
-import { Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, UserPlus } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -162,10 +163,18 @@ const Dashboard: React.FC = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Alert Dashboard</h1>
-          <Button onClick={() => navigate('/alerts/new')} className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Create Alert</span>
-          </Button>
+          <div className="flex space-x-2">
+            <InviteUsersModal dashboardId="1" isOwner={true}>
+              <Button variant="outline" className="flex items-center space-x-2">
+                <UserPlus className="h-4 w-4" />
+                <span>Invite Users</span>
+              </Button>
+            </InviteUsersModal>
+            <Button onClick={() => navigate('/alerts/new')} className="flex items-center space-x-2">
+              <Plus className="h-4 w-4" />
+              <span>Create Alert</span>
+            </Button>
+          </div>
         </div>
 
         <Card>
