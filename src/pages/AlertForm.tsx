@@ -25,6 +25,7 @@ const AlertForm: React.FC = () => {
 
   const [formData, setFormData] = useState<AlertFormData>({
     ruleName: '',
+    shortDescription: '',
     description: '',
     impact: '',
     mitigation: '',
@@ -59,6 +60,7 @@ const AlertForm: React.FC = () => {
 
       setFormData({
         ruleName: mockAlert.ruleName,
+        shortDescription: mockAlert.shortDescription || '',
         description: mockAlert.description,
         impact: mockAlert.impact,
         mitigation: mockAlert.mitigation,
@@ -113,6 +115,7 @@ const AlertForm: React.FC = () => {
     try {
       const submitData = new FormData();
       submitData.append('ruleName', formData.ruleName);
+      submitData.append('shortDescription', formData.shortDescription);
       submitData.append('description', formData.description);
       submitData.append('impact', formData.impact);
       submitData.append('mitigation', formData.mitigation);
@@ -211,14 +214,29 @@ const AlertForm: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="shortDescription">Short Description *</Label>
+                <Input
+                  id="shortDescription"
+                  value={formData.shortDescription}
+                  onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                  required
+                  placeholder="Brief one-line description for dashboard view..."
+                  maxLength={150}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {formData.shortDescription.length}/150 characters
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Full Description *</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   required
-                  placeholder="Describe what this alert detects"
-                  rows={3}
+                  placeholder="Detailed description of what this alert detects"
+                  rows={4}
                 />
               </div>
 

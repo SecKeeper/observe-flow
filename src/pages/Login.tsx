@@ -142,17 +142,23 @@ const Login: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+              <div className="mt-6 text-center space-y-3">
                 <Link 
-                  to="/register" 
-                  className="font-medium text-primary hover:text-primary/80 transition-colors"
+                  to="/forgot-password" 
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors block"
                 >
-                  Create one here
+                  Forgot your password?
                 </Link>
-              </p>
-            </div>
+                <p className="text-sm text-muted-foreground">
+                  Don't have an account?{' '}
+                  <Link 
+                    to="/register" 
+                    className="font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Create one here
+                  </Link>
+                </p>
+              </div>
           </CardContent>
         </Card>
 

@@ -31,6 +31,8 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -41,7 +43,7 @@ const Dashboard: React.FC = () => {
       dashboardId: '1',
       ruleName: 'SQL Injection Detection',
       shortDescription: 'Detects SQL injection attempts in web traffic',
-      description: 'Detects potential SQL injection attempts in web requests',
+      description: 'Detects potential SQL injection attempts in web requests by analyzing input patterns, parameter manipulation, and database query structures. This rule monitors HTTP requests for common SQL injection signatures including UNION statements, comment sequences, and escape characters.',
       impact: 'Could lead to database compromise and data theft',
       mitigation: 'Implement input validation and parameterized queries',
       falsePositiveCheck: 'Verify the request contains actual SQL injection patterns',
@@ -56,7 +58,7 @@ const Dashboard: React.FC = () => {
       dashboardId: '1',
       ruleName: 'Brute Force Login Alert',
       shortDescription: 'Monitors for multiple failed login attempts',
-      description: 'Monitors for multiple failed login attempts',
+      description: 'Monitors authentication endpoints for patterns indicative of brute force attacks, including multiple consecutive failed login attempts from the same IP address, rapid-fire authentication requests, and credential stuffing patterns.',
       impact: 'Potential unauthorized access to user accounts',
       mitigation: 'Implement rate limiting and account lockout policies',
       falsePositiveCheck: 'Check if attempts are from legitimate user patterns',
@@ -71,7 +73,7 @@ const Dashboard: React.FC = () => {
       dashboardId: '1',
       ruleName: 'Suspicious File Upload',
       shortDescription: 'Detects uploads of potentially malicious files',
-      description: 'Detects uploads of potentially malicious file types',
+      description: 'Analyzes file uploads for suspicious characteristics including executable file types, embedded scripts, malformed headers, and files that bypass extension filtering through techniques like double extensions or null byte injection.',
       impact: 'Could lead to malware execution or system compromise',
       mitigation: 'Implement file type validation and sandboxing',
       falsePositiveCheck: 'Verify file content matches suspicious patterns',
@@ -127,7 +129,14 @@ const Dashboard: React.FC = () => {
     }
 
     setFilteredAlerts(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   }, [alerts, searchTerm, severityFilter]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentAlerts = filteredAlerts.slice(startIndex, endIndex);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this alert?')) {
@@ -220,10 +229,13 @@ const Dashboard: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAlerts.map((alert) => (
+                  {currentAlerts.map((alert) => (
                     <TableRow key={alert.id}>
                       <TableCell className="font-medium">
-                        {alert.ruleName}
+                        <div>
+                          <div className="font-medium">{alert.ruleName}</div>
+                          <div className="text-sm text-muted-foreground">{alert.shortDescription}</div>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <SeverityBadge severity={alert.severity} />
@@ -278,6 +290,55 @@ const Dashboard: React.FC = () => {
             {filteredAlerts.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No alerts found matching your criteria.
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredAlerts.length)} of {filteredAlerts.length} alerts
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => 
+                        page === 1 || 
+                        page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      )
+                      .map((page, index, array) => (
+                        <React.Fragment key={page}>
+                          {index > 0 && array[index - 1] !== page - 1 && (
+                            <span className="px-2">...</span>
+                          )}
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

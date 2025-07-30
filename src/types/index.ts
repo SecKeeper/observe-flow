@@ -45,6 +45,7 @@ export interface Alert {
   tags: string[];
   fileUrl?: string;
   externalUrl?: string;
+  attachedFile?: string;
   createdBy: User;
   createdAt: string;
   updatedAt: string;
@@ -52,6 +53,7 @@ export interface Alert {
 
 export interface AlertFormData {
   ruleName: string;
+  shortDescription: string;
   description: string;
   impact: string;
   mitigation: string;

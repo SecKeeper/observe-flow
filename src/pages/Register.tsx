@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield, Eye, EyeOff } from 'lucide-react';
 
 const Register: React.FC = () => {
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,9 +20,33 @@ const Register: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const validatePassword = (pwd: string) => {
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasNumbers = /\d/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    return {
+      isValid: pwd.length >= 8 && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar,
+      length: pwd.length >= 8,
+      uppercase: hasUpperCase,
+      lowercase: hasLowerCase,
+      numbers: hasNumbers,
+      special: hasSpecialChar
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Email required",
+        description: "Please enter a valid email address.",
+      });
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -31,11 +56,12 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
       toast({
         variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        title: "Password too weak",
+        description: "Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.",
       });
       return;
     }
@@ -82,6 +108,18 @@ const Register: React.FC = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="your.email@company.com"
+              />
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -150,6 +188,34 @@ const Register: React.FC = () => {
                 </Button>
               </div>
             </div>
+            
+            {password && (
+              <div className="space-y-2">
+                <Label className="text-sm">Password Strength</Label>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className={`flex items-center space-x-1 ${validatePassword(password).length ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div className={`w-2 h-2 rounded-full ${validatePassword(password).length ? 'bg-green-600' : 'bg-muted'}`} />
+                    <span>8+ characters</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${validatePassword(password).uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div className={`w-2 h-2 rounded-full ${validatePassword(password).uppercase ? 'bg-green-600' : 'bg-muted'}`} />
+                    <span>Uppercase</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${validatePassword(password).lowercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div className={`w-2 h-2 rounded-full ${validatePassword(password).lowercase ? 'bg-green-600' : 'bg-muted'}`} />
+                    <span>Lowercase</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${validatePassword(password).numbers ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div className={`w-2 h-2 rounded-full ${validatePassword(password).numbers ? 'bg-green-600' : 'bg-muted'}`} />
+                    <span>Numbers</span>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${validatePassword(password).special ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <div className={`w-2 h-2 rounded-full ${validatePassword(password).special ? 'bg-green-600' : 'bg-muted'}`} />
+                    <span>Special chars</span>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create Account"}
