@@ -38,7 +38,7 @@ const Login: React.FC = () => {
           title: "Login successful",
           description: "Welcome to AlertFlow!",
         });
-        navigate('/dashboards');
+        navigate('/dashboard');
       } else {
         toast({
           variant: "destructive",
