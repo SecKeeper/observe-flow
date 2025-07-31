@@ -5,10 +5,12 @@ export type AccessLevel = 'Owner' | 'Editor' | 'Read-only';
 
 export interface User {
   id: string;
+  user_id: string;
   username: string;
   email: string;
-  role: string;
-  createdAt: string;
+  role: 'admin' | 'editor' | 'read-only';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Dashboard {
@@ -34,32 +36,37 @@ export interface DashboardInvite {
 
 export interface Alert {
   id: string;
-  dashboardId: string;
-  ruleName: string;
-  shortDescription: string;
+  dashboard_id: string;
+  rule_name: string;
+  short_description: string;
   description: string;
   impact: string;
   mitigation: string;
-  falsePositiveCheck: string;
+  false_positive_check: string;
+  findings: string;
   severity: Severity;
   tags: string[];
-  fileUrl?: string;
-  externalUrl?: string;
-  attachedFile?: string;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
+  file_url?: string;
+  external_url?: string;
+  attached_file?: string;
+  is_active: boolean;
+  assigned_to?: string;
+  is_in_progress: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AlertFormData {
-  ruleName: string;
-  shortDescription: string;
+  rule_name: string;
+  short_description: string;
   description: string;
   impact: string;
   mitigation: string;
-  falsePositiveCheck: string;
+  false_positive_check: string;
+  findings: string;
   severity: Severity;
   tags: string;
   file?: File;
-  externalUrl?: string;
+  external_url?: string;
 }

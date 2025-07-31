@@ -14,24 +14,29 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
-import { AlertFormData, Alert } from '@/types';
+import { AlertFormData, Severity } from '@/types';
 import { ArrowLeft, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AlertForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = !!id;
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<AlertFormData>({
-    ruleName: '',
-    shortDescription: '',
+    rule_name: '',
+    short_description: '',
     description: '',
     impact: '',
     mitigation: '',
-    falsePositiveCheck: '',
+    false_positive_check: '',
+    findings: '',
     severity: 'Medium',
     tags: '',
+    external_url: '',
   });
 
   const [file, setFile] = useState<File | null>(null);
@@ -40,37 +45,47 @@ const AlertForm: React.FC = () => {
 
   useEffect(() => {
     if (isEditing) {
-      // In real implementation, fetch the alert data
-      // For now, use mock data
-      const mockAlert: Alert = {
-        id: '1',
-        dashboardId: '1',
-        ruleName: 'SQL Injection Detection',
-        shortDescription: 'Detects SQL injection attempts in web traffic',
-        description: 'Detects potential SQL injection attempts in web requests',
-        impact: 'Could lead to database compromise and data theft',
-        mitigation: 'Implement input validation and parameterized queries',
-        falsePositiveCheck: 'Verify the request contains actual SQL injection patterns',
-        severity: 'Critical',
-        tags: ['web', 'database', 'injection'],
-        createdBy: { id: '1', username: 'admin', email: 'admin@alertflow.com', role: 'admin', createdAt: '2024-01-01T00:00:00Z' },
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-01-15T10:30:00Z',
-      };
-
-      setFormData({
-        ruleName: mockAlert.ruleName,
-        shortDescription: mockAlert.shortDescription || '',
-        description: mockAlert.description,
-        impact: mockAlert.impact,
-        mitigation: mockAlert.mitigation,
-        falsePositiveCheck: mockAlert.falsePositiveCheck,
-        severity: mockAlert.severity,
-        tags: mockAlert.tags.join(', '),
-      });
-      setInitialLoading(false);
+      fetchAlert();
     }
   }, [isEditing, id]);
+
+  const fetchAlert = async () => {
+    if (!id) return;
+
+    try {
+      const { data: alert, error } = await supabase
+        .from('alerts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      if (alert) {
+        setFormData({
+          rule_name: alert.rule_name,
+          short_description: alert.short_description,
+          description: alert.description,
+          impact: alert.impact,
+          mitigation: alert.mitigation,
+          false_positive_check: alert.false_positive_check,
+          findings: alert.findings || '',
+          severity: alert.severity as Severity,
+          tags: alert.tags?.join(', ') || '',
+          external_url: alert.external_url || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching alert:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load alert data",
+      });
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof AlertFormData, value: string) => {
     setFormData(prev => ({
@@ -110,34 +125,47 @@ const AlertForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setLoading(true);
 
     try {
-      const submitData = new FormData();
-      submitData.append('ruleName', formData.ruleName);
-      submitData.append('shortDescription', formData.shortDescription);
-      submitData.append('description', formData.description);
-      submitData.append('impact', formData.impact);
-      submitData.append('mitigation', formData.mitigation);
-      submitData.append('falsePositiveCheck', formData.falsePositiveCheck);
-      submitData.append('severity', formData.severity);
-      submitData.append('tags', formData.tags);
-      
-      if (file) {
-        submitData.append('file', file);
+      const tagsArray = formData.tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+
+      const alertData = {
+        dashboard_id: 'default-dashboard',
+        rule_name: formData.rule_name,
+        short_description: formData.short_description,
+        description: formData.description,
+        impact: formData.impact,
+        mitigation: formData.mitigation,
+        false_positive_check: formData.false_positive_check,
+        findings: formData.findings,
+        severity: formData.severity,
+        tags: tagsArray,
+        external_url: formData.external_url,
+        is_active: true,
+        is_in_progress: false,
+        created_by: user.id
+      };
+
+      if (isEditing) {
+        const { error } = await supabase
+          .from('alerts')
+          .update(alertData)
+          .eq('id', id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('alerts')
+          .insert([alertData]);
+
+        if (error) throw error;
       }
-
-      const url = isEditing ? `/api/alerts/${id}` : '/api/alerts';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      // In real implementation:
-      // const response = await fetch(url, {
-      //   method,
-      //   body: submitData,
-      // });
-
-      // For demo purposes, simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
         title: isEditing ? "Alert updated" : "Alert created",
@@ -145,11 +173,12 @@ const AlertForm: React.FC = () => {
       });
 
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving alert:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to ${isEditing ? 'update' : 'create'} alert.`,
+        description: error.message || `Failed to ${isEditing ? 'update' : 'create'} alert.`,
       });
     } finally {
       setLoading(false);
@@ -187,11 +216,11 @@ const AlertForm: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="ruleName">Rule Name *</Label>
+                  <Label htmlFor="rule_name">Rule Name *</Label>
                   <Input
-                    id="ruleName"
-                    value={formData.ruleName}
-                    onChange={(e) => handleInputChange('ruleName', e.target.value)}
+                    id="rule_name"
+                    value={formData.rule_name}
+                    onChange={(e) => handleInputChange('rule_name', e.target.value)}
                     required
                     placeholder="Enter rule name"
                   />
@@ -214,17 +243,17 @@ const AlertForm: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="shortDescription">Short Description *</Label>
+                <Label htmlFor="short_description">Short Description *</Label>
                 <Input
-                  id="shortDescription"
-                  value={formData.shortDescription}
-                  onChange={(e) => handleInputChange('shortDescription', e.target.value)}
+                  id="short_description"
+                  value={formData.short_description}
+                  onChange={(e) => handleInputChange('short_description', e.target.value)}
                   required
                   placeholder="Brief one-line description for dashboard view..."
                   maxLength={150}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {formData.shortDescription.length}/150 characters
+                  {formData.short_description.length}/150 characters
                 </p>
               </div>
 
@@ -265,13 +294,24 @@ const AlertForm: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="falsePositiveCheck">False Positive Check *</Label>
+                <Label htmlFor="false_positive_check">False Positive Check *</Label>
                 <Textarea
-                  id="falsePositiveCheck"
-                  value={formData.falsePositiveCheck}
-                  onChange={(e) => handleInputChange('falsePositiveCheck', e.target.value)}
+                  id="false_positive_check"
+                  value={formData.false_positive_check}
+                  onChange={(e) => handleInputChange('false_positive_check', e.target.value)}
                   required
                   placeholder="Describe how to verify if this alert is a false positive"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="findings">Findings</Label>
+                <Textarea
+                  id="findings"
+                  value={formData.findings}
+                  onChange={(e) => handleInputChange('findings', e.target.value)}
+                  placeholder="Investigation results and technical analysis"
                   rows={3}
                 />
               </div>
@@ -287,6 +327,16 @@ const AlertForm: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Separate multiple tags with commas
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="external_url">External URL</Label>
+                <Input
+                  id="external_url"
+                  value={formData.external_url}
+                  onChange={(e) => handleInputChange('external_url', e.target.value)}
+                  placeholder="https://example.com/reference"
+                />
               </div>
 
               <div className="space-y-2">

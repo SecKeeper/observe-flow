@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -23,104 +24,63 @@ import SeverityBadge from '@/components/SeverityBadge';
 import Layout from '@/components/Layout';
 import InviteUsersModal from '@/components/InviteUsersModal';
 import { Alert } from '@/types';
-import { Plus, Search, Eye, Edit, Trash2, UserPlus } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, UserPlus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [filteredAlerts, setFilteredAlerts] = useState<Alert[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Mock data for demonstration
-  const mockAlerts: Alert[] = [
-    {
-      id: '1',
-      dashboardId: '1',
-      ruleName: 'SQL Injection Detection',
-      shortDescription: 'Detects SQL injection attempts in web traffic',
-      description: 'Detects potential SQL injection attempts in web requests by analyzing input patterns, parameter manipulation, and database query structures. This rule monitors HTTP requests for common SQL injection signatures including UNION statements, comment sequences, and escape characters.',
-      impact: 'Could lead to database compromise and data theft',
-      mitigation: 'Implement input validation and parameterized queries',
-      falsePositiveCheck: 'Verify the request contains actual SQL injection patterns',
-      severity: 'Critical',
-      tags: ['web', 'database', 'injection'],
-      createdBy: { id: '1', username: 'admin', email: 'admin@alertflow.com', role: 'admin', createdAt: '2024-01-01T00:00:00Z' },
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-15T10:30:00Z',
-    },
-    {
-      id: '2',
-      dashboardId: '1',
-      ruleName: 'Brute Force Login Alert',
-      shortDescription: 'Monitors for multiple failed login attempts',
-      description: 'Monitors authentication endpoints for patterns indicative of brute force attacks, including multiple consecutive failed login attempts from the same IP address, rapid-fire authentication requests, and credential stuffing patterns.',
-      impact: 'Potential unauthorized access to user accounts',
-      mitigation: 'Implement rate limiting and account lockout policies',
-      falsePositiveCheck: 'Check if attempts are from legitimate user patterns',
-      severity: 'High',
-      tags: ['authentication', 'brute-force', 'security'],
-      createdBy: { id: '2', username: 'security_analyst', email: 'analyst@alertflow.com', role: 'analyst', createdAt: '2024-01-01T00:00:00Z' },
-      createdAt: '2024-01-14T14:20:00Z',
-      updatedAt: '2024-01-14T14:20:00Z',
-    },
-    {
-      id: '3',
-      dashboardId: '1',
-      ruleName: 'Suspicious File Upload',
-      shortDescription: 'Detects uploads of potentially malicious files',
-      description: 'Analyzes file uploads for suspicious characteristics including executable file types, embedded scripts, malformed headers, and files that bypass extension filtering through techniques like double extensions or null byte injection.',
-      impact: 'Could lead to malware execution or system compromise',
-      mitigation: 'Implement file type validation and sandboxing',
-      falsePositiveCheck: 'Verify file content matches suspicious patterns',
-      severity: 'Medium',
-      tags: ['file-upload', 'malware', 'web'],
-      createdBy: { id: '3', username: 'dev_team', email: 'dev@alertflow.com', role: 'developer', createdAt: '2024-01-01T00:00:00Z' },
-      createdAt: '2024-01-13T09:15:00Z',
-      updatedAt: '2024-01-13T09:15:00Z',
-    },
-  ];
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Simulate API call
-    const fetchAlerts = async () => {
-      setLoading(true);
-      try {
-        // In real implementation, this would be an API call
-        // const response = await fetch('/api/alerts');
-        // const data = await response.json();
-        // setAlerts(data);
-        
-        // For now, use mock data
-        setTimeout(() => {
-          setAlerts(mockAlerts);
-          setFilteredAlerts(mockAlerts);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch alerts.",
-        });
-        setLoading(false);
-      }
-    };
-
     fetchAlerts();
-  }, [toast]);
+  }, []);
+
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('alerts')
+        .select(`
+          *,
+          assigned_profile:assigned_to(username),
+          created_profile:created_by(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setAlerts(data as any || []);
+      setFilteredAlerts(data as any || []);
+    } catch (error: any) {
+      console.error('Error fetching alerts:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to fetch alerts.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = alerts;
 
     if (searchTerm) {
       filtered = filtered.filter(alert =>
-        alert.ruleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        alert.rule_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        alert.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -128,9 +88,25 @@ const Dashboard: React.FC = () => {
       filtered = filtered.filter(alert => alert.severity === severityFilter);
     }
 
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'working') {
+        filtered = filtered.filter(alert => alert.is_in_progress);
+      } else if (statusFilter === 'idle') {
+        filtered = filtered.filter(alert => !alert.is_in_progress);
+      }
+    }
+
+    if (activeFilter !== 'all') {
+      if (activeFilter === 'active') {
+        filtered = filtered.filter(alert => alert.is_active);
+      } else if (activeFilter === 'inactive') {
+        filtered = filtered.filter(alert => !alert.is_active);
+      }
+    }
+
     setFilteredAlerts(filtered);
-    setCurrentPage(1); // Reset to first page when filtering
-  }, [alerts, searchTerm, severityFilter]);
+    setCurrentPage(1);
+  }, [alerts, searchTerm, severityFilter, statusFilter, activeFilter]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
@@ -141,20 +117,61 @@ const Dashboard: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this alert?')) {
       try {
-        // In real implementation: await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+        const { error } = await supabase
+          .from('alerts')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
         setAlerts(alerts.filter(alert => alert.id !== id));
         toast({
           title: "Alert deleted",
           description: "The alert has been successfully deleted.",
         });
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Error deleting alert:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to delete alert.",
+          description: error.message || "Failed to delete alert.",
         });
       }
     }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .update({ is_in_progress: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setAlerts(alerts.map(alert => 
+        alert.id === id 
+          ? { ...alert, is_in_progress: !currentStatus }
+          : alert
+      ));
+
+      toast({
+        title: "Status updated",
+        description: `Alert status changed to ${!currentStatus ? 'Working' : 'Idle'}.`,
+      });
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update status.",
+      });
+    }
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   if (loading) {
@@ -191,8 +208,8 @@ const Dashboard: React.FC = () => {
             <CardTitle>Security Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex space-x-4 mb-6">
-              <div className="flex-1">
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex-1 min-w-[200px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -215,6 +232,26 @@ const Dashboard: React.FC = () => {
                   <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="working">Working</SelectItem>
+                  <SelectItem value="idle">Idle</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={activeFilter} onValueChange={setActiveFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Active" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="rounded-md border">
@@ -223,6 +260,10 @@ const Dashboard: React.FC = () => {
                   <TableRow>
                     <TableHead>Rule Name</TableHead>
                     <TableHead>Severity</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead>Active</TableHead>
+                    <TableHead>Findings</TableHead>
                     <TableHead>Tags</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead>Actions</TableHead>
@@ -233,16 +274,51 @@ const Dashboard: React.FC = () => {
                     <TableRow key={alert.id}>
                       <TableCell className="font-medium">
                         <div>
-                          <div className="font-medium">{alert.ruleName}</div>
-                          <div className="text-sm text-muted-foreground">{alert.shortDescription}</div>
+                          <div className="font-medium">{alert.rule_name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {truncateText(alert.short_description, 50)}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <SeverityBadge severity={alert.severity} />
                       </TableCell>
                       <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleStatus(alert.id, alert.is_in_progress)}
+                          className="p-1"
+                        >
+                          <Badge variant={alert.is_in_progress ? "default" : "secondary"}>
+                            {alert.is_in_progress ? 'Working' : 'Idle'}
+                          </Badge>
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {alert.assigned_to ? (
+                          <Badge variant="outline">
+                            {(alert as any).assigned_profile?.username || 'Unknown'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">Unassigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {alert.is_active ? (
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {alert.findings ? truncateText(alert.findings, 40) : 'No findings yet'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {alert.tags.map((tag, index) => (
+                          {alert.tags?.slice(0, 2).map((tag, index) => (
                             <span
                               key={index}
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground"
@@ -250,10 +326,15 @@ const Dashboard: React.FC = () => {
                               {tag}
                             </span>
                           ))}
+                          {alert.tags && alert.tags.length > 2 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{alert.tags.length - 2}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(alert.updatedAt).toLocaleDateString()}
+                        {new Date(alert.updated_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">

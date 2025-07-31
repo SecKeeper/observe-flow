@@ -3,71 +3,81 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import SeverityBadge from '@/components/SeverityBadge';
 import { Alert } from '@/types';
-import { ArrowLeft, Edit, Calendar, User, Download } from 'lucide-react';
+import { ArrowLeft, Edit, Calendar, User, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AlertDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [alert, setAlert] = useState<Alert | null>(null);
   const [loading, setLoading] = useState(true);
+  const [findings, setFindings] = useState('');
+  const [editingFindings, setEditingFindings] = useState(false);
 
   useEffect(() => {
-    const fetchAlert = async () => {
-      setLoading(true);
-      try {
-        // In real implementation:
-        // const response = await fetch(`/api/alerts/${id}`);
-        // const data = await response.json();
-        // setAlert(data);
-
-        // For demo purposes, use mock data
-        const mockAlert: Alert = {
-          id: id || '1',
-          dashboardId: '1',
-          ruleName: 'SQL Injection Detection',
-          shortDescription: 'Detects SQL injection attempts in web traffic',
-          description: 'This alert monitors web application traffic for patterns that indicate SQL injection attempts. It analyzes HTTP request parameters, form data, and URL parameters for common SQL injection signatures including UNION SELECT statements, comment sequences, and time-based blind injection patterns.',
-          impact: 'A successful SQL injection attack could lead to unauthorized database access, data exfiltration, data manipulation, or complete database compromise. Attackers may be able to bypass authentication, escalate privileges, or gain administrative access to the application and underlying database server.',
-          mitigation: 'Immediately implement parameterized queries and prepared statements for all database interactions. Validate and sanitize all user input on both client and server sides. Apply the principle of least privilege to database connections. Enable Web Application Firewall (WAF) rules to block common injection patterns. Conduct regular security code reviews and penetration testing.',
-          falsePositiveCheck: 'Verify that the detected pattern is not part of legitimate application functionality such as search queries containing SQL-like keywords, legitimate database administration tools, or automated testing scripts. Check if the source IP belongs to authorized security scanners or development tools. Review the full request context and user session to determine intent.',
-          severity: 'Critical',
-          tags: ['web', 'database', 'injection', 'owasp-top10'],
-          fileUrl: '/uploads/sql-injection-samples.pcap',
-          createdBy: { id: '1', username: 'security_admin', email: 'admin@alertflow.com', role: 'admin', createdAt: '2024-01-01T00:00:00Z' },
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-01-20T14:45:00Z',
-        };
-
-        setTimeout(() => {
-          setAlert(mockAlert);
-          setLoading(false);
-        }, 500);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch alert details.",
-        });
-        setLoading(false);
-      }
-    };
-
     if (id) {
       fetchAlert();
     }
-  }, [id, toast]);
+  }, [id]);
 
-  const handleDownloadFile = () => {
-    if (alert?.fileUrl) {
-      // In real implementation, this would download the file
+  const fetchAlert = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('alerts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      setAlert(data as any);
+      setFindings(data?.findings || '');
+    } catch (error: any) {
+      console.error('Error fetching alert:', error);
       toast({
-        title: "Download started",
-        description: "The file download has begun.",
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to fetch alert details.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveFindings = async () => {
+    if (!alert || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .update({ findings })
+        .eq('id', alert.id);
+
+      if (error) throw error;
+
+      setAlert({ ...alert, findings });
+      setEditingFindings(false);
+      toast({
+        title: "Findings updated",
+        description: "Investigation findings have been saved.",
+      });
+    } catch (error: any) {
+      console.error('Error updating findings:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update findings.",
       });
     }
   };
@@ -119,8 +129,24 @@ const AlertDetail: React.FC = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">{alert.ruleName}</CardTitle>
-                  <SeverityBadge severity={alert.severity} />
+                  <CardTitle className="text-2xl">{alert.rule_name}</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <SeverityBadge severity={alert.severity} />
+                    {alert.is_active ? (
+                      <Badge variant="destructive">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Inactive
+                      </Badge>
+                    )}
+                    <Badge variant={alert.is_in_progress ? "default" : "outline"}>
+                      {alert.is_in_progress ? 'Working' : 'Idle'}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -141,29 +167,54 @@ const AlertDetail: React.FC = () => {
 
                 <div>
                   <h3 className="font-semibold text-lg mb-2">False Positive Check</h3>
-                  <p className="text-foreground leading-relaxed">{alert.falsePositiveCheck}</p>
+                  <p className="text-foreground leading-relaxed">{alert.false_positive_check}</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg">Findings</h3>
+                    {!editingFindings && (
+                      <Button variant="outline" size="sm" onClick={() => setEditingFindings(true)}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                  {editingFindings ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={findings}
+                        onChange={(e) => setFindings(e.target.value)}
+                        placeholder="Add investigation findings and analysis..."
+                        rows={6}
+                      />
+                      <div className="flex space-x-2">
+                        <Button onClick={handleSaveFindings}>Save</Button>
+                        <Button variant="outline" onClick={() => {
+                          setFindings(alert.findings || '');
+                          setEditingFindings(false);
+                        }}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-foreground leading-relaxed">
+                      {alert.findings || 'No findings recorded yet.'}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {alert.tags.map((tag, index) => (
+                    {alert.tags?.map((tag, index) => (
                       <Badge key={index} variant="secondary">
                         {tag}
                       </Badge>
                     ))}
                   </div>
                 </div>
-
-                {alert.fileUrl && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Attached File</h3>
-                    <Button variant="outline" onClick={handleDownloadFile}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download File
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -178,7 +229,7 @@ const AlertDetail: React.FC = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Created By</p>
-                    <p className="text-sm text-muted-foreground">{alert.createdBy.username}</p>
+                    <p className="text-sm text-muted-foreground">{alert.created_by}</p>
                   </div>
                 </div>
 
@@ -187,7 +238,7 @@ const AlertDetail: React.FC = () => {
                   <div>
                     <p className="text-sm font-medium">Created</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(alert.createdAt).toLocaleString()}
+                      {new Date(alert.created_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -197,32 +248,10 @@ const AlertDetail: React.FC = () => {
                   <div>
                     <p className="text-sm font-medium">Last Updated</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(alert.updatedAt).toLocaleString()}
+                      {new Date(alert.updated_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  className="w-full" 
-                  onClick={() => navigate(`/alerts/${alert.id}/edit`)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Alert
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigator.clipboard.writeText(window.location.href)}
-                >
-                  Share Link
-                </Button>
               </CardContent>
             </Card>
           </div>
