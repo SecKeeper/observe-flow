@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          assigned_to: string | null
+          attached_file: string | null
+          created_at: string
+          created_by: string
+          dashboard_id: string
+          description: string
+          external_url: string | null
+          false_positive_check: string
+          file_url: string | null
+          findings: string | null
+          id: string
+          impact: string
+          is_active: boolean
+          is_in_progress: boolean
+          mitigation: string
+          rule_name: string
+          severity: string
+          short_description: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attached_file?: string | null
+          created_at?: string
+          created_by: string
+          dashboard_id: string
+          description: string
+          external_url?: string | null
+          false_positive_check: string
+          file_url?: string | null
+          findings?: string | null
+          id?: string
+          impact: string
+          is_active?: boolean
+          is_in_progress?: boolean
+          mitigation: string
+          rule_name: string
+          severity: string
+          short_description: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attached_file?: string | null
+          created_at?: string
+          created_by?: string
+          dashboard_id?: string
+          description?: string
+          external_url?: string | null
+          false_positive_check?: string
+          file_url?: string | null
+          findings?: string | null
+          id?: string
+          impact?: string
+          is_active?: boolean
+          is_in_progress?: boolean
+          mitigation?: string
+          rule_name?: string
+          severity?: string
+          short_description?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "alerts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
