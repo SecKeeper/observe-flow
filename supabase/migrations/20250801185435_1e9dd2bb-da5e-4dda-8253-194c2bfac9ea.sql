@@ -1,0 +1,94 @@
+-- Create a sample profile first
+INSERT INTO public.profiles (user_id, username, email, role) 
+VALUES (
+  gen_random_uuid(),
+  'demo_user',
+  'demo@example.com',
+  'admin'
+);
+
+-- Add sample alerts with different severities
+INSERT INTO public.alerts (
+  dashboard_id,
+  rule_name,
+  short_description,
+  description,
+  impact,
+  mitigation,
+  false_positive_check,
+  findings,
+  severity,
+  tags,
+  created_by,
+  is_active
+) VALUES 
+(
+  gen_random_uuid(),
+  'Suspicious Login Activity',
+  'Multiple failed login attempts detected',
+  'Multiple consecutive failed login attempts from the same IP address within a short time window, indicating potential brute force attack.',
+  'Potential unauthorized access to user accounts and data breach.',
+  'Implement account lockout after failed attempts, enable 2FA, monitor login patterns.',
+  'Check if IP belongs to legitimate user or VPN service. Verify time zones and login patterns.',
+  'IP: 192.168.1.100 attempted 15 failed logins in 5 minutes',
+  'High',
+  ARRAY['security', 'authentication', 'brute-force'],
+  (SELECT user_id FROM public.profiles WHERE username = 'demo_user'),
+  true
+),
+(
+  gen_random_uuid(),
+  'Critical System Vulnerability',
+  'Unpatched security vulnerability in production system',
+  'Critical CVE-2024-0001 vulnerability detected in web server allowing remote code execution.',
+  'Complete system compromise, data theft, service disruption.',
+  'Apply security patch immediately, restart affected services, conduct security audit.',
+  'Verify vulnerability scanner accuracy and check if patch is already applied.',
+  'CVE-2024-0001 detected on web-server-01, CVSS score: 9.8',
+  'Critical',
+  ARRAY['vulnerability', 'patch-management', 'rce'],
+  (SELECT user_id FROM public.profiles WHERE username = 'demo_user'),
+  true
+),
+(
+  gen_random_uuid(),
+  'Unusual Network Traffic',
+  'Abnormal data transfer patterns detected',
+  'Large volume of outbound traffic detected during off-hours, potentially indicating data exfiltration.',
+  'Possible data breach or malware communication with command & control servers.',
+  'Investigate traffic destination, check for malware, review data access logs.',
+  'Verify if traffic is legitimate business operation or scheduled backup.',
+  'Outbound traffic: 2.5GB at 3:00 AM to unknown external IP',
+  'Medium',
+  ARRAY['network', 'data-exfiltration', 'anomaly'],
+  (SELECT user_id FROM public.profiles WHERE username = 'demo_user'),
+  true
+),
+(
+  gen_random_uuid(),
+  'Outdated Software Component',
+  'Legacy software component needs updating',
+  'Database management system running version from 2019 with known security issues.',
+  'Potential security vulnerabilities and compatibility issues.',
+  'Schedule maintenance window to update to latest stable version.',
+  'Check if current version has custom patches or if update is scheduled.',
+  'PostgreSQL 11.5 running, current stable is 16.1',
+  'Low',
+  ARRAY['maintenance', 'software-update', 'legacy'],
+  (SELECT user_id FROM public.profiles WHERE username = 'demo_user'),
+  true
+),
+(
+  gen_random_uuid(),
+  'Privileged Account Misuse',
+  'Administrative account accessed outside business hours',
+  'Root access account used for file modifications at 2:30 AM on weekend.',
+  'Potential insider threat or compromised administrative credentials.',
+  'Review account activity, change passwords, implement privileged access management.',
+  'Verify if activity was part of scheduled maintenance or emergency response.',
+  'Root account activity: modified /etc/passwd at 02:30:15 on Saturday',
+  'Medium',
+  ARRAY['privilege-escalation', 'insider-threat', 'access-control'],
+  (SELECT user_id FROM public.profiles WHERE username = 'demo_user'),
+  true
+);
