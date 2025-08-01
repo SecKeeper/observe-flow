@@ -14,6 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_audit_log: {
+        Row: {
+          action: string
+          alert_id: string | null
+          changes: Json | null
+          id: string
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          alert_id?: string | null
+          changes?: Json | null
+          id?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          alert_id?: string | null
+          changes?: Json | null
+          id?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_audit_log_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      alert_comments: {
+        Row: {
+          alert_id: string | null
+          author_id: string | null
+          comment: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          alert_id?: string | null
+          author_id?: string | null
+          comment: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          alert_id?: string | null
+          author_id?: string | null
+          comment?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_comments_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      alert_files: {
+        Row: {
+          alert_id: string | null
+          content_type: string | null
+          file_size: number | null
+          file_url: string
+          filename: string | null
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          content_type?: string | null
+          file_size?: number | null
+          file_url: string
+          filename?: string | null
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          content_type?: string | null
+          file_size?: number | null
+          file_url?: string
+          filename?: string | null
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_files_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      alert_status_log: {
+        Row: {
+          alert_id: string | null
+          change_type: string | null
+          changed_by: string | null
+          from_state: string | null
+          id: string
+          timestamp: string | null
+          to_state: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          change_type?: string | null
+          changed_by?: string | null
+          from_state?: string | null
+          id?: string
+          timestamp?: string | null
+          to_state?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          change_type?: string | null
+          changed_by?: string | null
+          from_state?: string | null
+          id?: string
+          timestamp?: string | null
+          to_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_status_log_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alert_status_log_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           assigned_to: string | null
@@ -32,6 +206,7 @@ export type Database = {
           is_in_progress: boolean
           mitigation: string
           rule_name: string
+          search_vector: unknown | null
           severity: string
           short_description: string
           tags: string[] | null
@@ -54,6 +229,7 @@ export type Database = {
           is_in_progress?: boolean
           mitigation: string
           rule_name: string
+          search_vector?: unknown | null
           severity: string
           short_description: string
           tags?: string[] | null
@@ -76,6 +252,7 @@ export type Database = {
           is_in_progress?: boolean
           mitigation?: string
           rule_name?: string
+          search_vector?: unknown | null
           severity?: string
           short_description?: string
           tags?: string[] | null
@@ -92,6 +269,44 @@ export type Database = {
           {
             foreignKeyName: "alerts_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dashboards: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          owner_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          owner_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          owner_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboards_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
@@ -127,6 +342,92 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      role_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          justification: string
+          requested_role: string
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          justification: string
+          requested_role: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          justification?: string
+          requested_role?: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "role_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_activity_log: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          details: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
