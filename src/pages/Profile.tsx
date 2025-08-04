@@ -18,7 +18,7 @@ interface ProfileData {
   confirmPassword: string;
 }
 
-export const Profile: React.FC = () => {
+const Profile: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -245,3 +245,5 @@ export const Profile: React.FC = () => {
     </Layout>
   );
 };
+
+export default Profile;

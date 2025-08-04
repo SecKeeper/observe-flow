@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Shield, Moon, Sun } from 'lucide-react';
+import { User, LogOut, Shield, Moon, Sun, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 interface LayoutProps {
@@ -57,6 +58,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
                     Role: {user.role}
                   </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex w-full items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />

@@ -274,18 +274,25 @@ export class AlertService {
 
 // Alert Sharing Services
 export class AlertShareService {
-  // Create share
+  // Create share using edge function
   static async createShare(shareData: {
     alert_id: string
     shared_with_email: string
     access_type: 'read-only' | 'edit'
     expires_in_hours?: number
   }) {
-    const response = await fetch('/api/share-alert?action=create', {
+    const session = await supabase.auth.getSession()
+    const token = session.data.session?.access_token
+
+    if (!token) {
+      throw new Error('Authentication required')
+    }
+
+    const response = await fetch('https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/share-alert?action=create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(shareData)
     })
@@ -298,13 +305,20 @@ export class AlertShareService {
     return response.json()
   }
 
-  // Revoke share
+  // Revoke share using edge function
   static async revokeShare(shareId: string) {
-    const response = await fetch('/api/share-alert?action=revoke', {
+    const session = await supabase.auth.getSession()
+    const token = session.data.session?.access_token
+
+    if (!token) {
+      throw new Error('Authentication required')
+    }
+
+    const response = await fetch('https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/share-alert?action=revoke', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ share_id: shareId })
     })
@@ -317,15 +331,22 @@ export class AlertShareService {
     return response.json()
   }
 
-  // List shares
+  // List shares using edge function
   static async listShares(alertId?: string) {
+    const session = await supabase.auth.getSession()
+    const token = session.data.session?.access_token
+
+    if (!token) {
+      throw new Error('Authentication required')
+    }
+
     const url = alertId 
-      ? `/api/share-alert?action=list&alert_id=${alertId}`
-      : '/api/share-alert?action=list'
+      ? `https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/share-alert?action=list&alert_id=${alertId}`
+      : 'https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/share-alert?action=list'
 
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        'Authorization': `Bearer ${token}`
       }
     })
 
@@ -337,9 +358,9 @@ export class AlertShareService {
     return response.json()
   }
 
-  // Access shared alert
+  // Access shared alert using edge function
   static async accessSharedAlert(shareToken: string) {
-    const response = await fetch(`/api/share-alert?action=access&token=${shareToken}`)
+    const response = await fetch(`https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/share-alert?action=access&token=${shareToken}`)
 
     if (!response.ok) {
       const error = await response.json()
@@ -352,26 +373,34 @@ export class AlertShareService {
 
 // Export Services
 export class ExportService {
-  // Export alerts
+  // Export alerts using edge function
   static async exportAlerts(format: 'csv' | 'json', filters?: any): Promise<string> {
-    const { data: alerts, error } = await supabase
-      .from('alerts')
-      .select('*')
-    
-    if (error) throw error
+    const session = await supabase.auth.getSession()
+    const token = session.data.session?.access_token
 
-    if (format === 'csv') {
-      // Convert to CSV
-      const headers = Object.keys(alerts[0] || {}).join(',')
-      const rows = alerts.map(alert => 
-        Object.values(alert).map(val => 
-          typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val
-        ).join(',')
-      ).join('\n')
-      return headers + '\n' + rows
-    } else {
-      return JSON.stringify(alerts, null, 2)
+    if (!token) {
+      throw new Error('Authentication required')
     }
+
+    const url = new URL('https://xvjghqiuhpdlxdzkdzdw.supabase.co/functions/v1/export-alerts')
+    url.searchParams.set('format', format)
+    if (filters) {
+      url.searchParams.set('filters', JSON.stringify(filters))
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(error || 'Export failed')
+    }
+
+    return response.text()
   }
 }
 

@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import AlertForm from "./pages/AlertForm";
 import AlertDetail from "./pages/AlertDetail";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,11 @@ const App = () => (
             <Route path="/alerts/:id/edit" element={
               <ProtectedRoute>
                 <AlertForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

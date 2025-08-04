@@ -28,6 +28,7 @@ import { Plus, Search, Eye, Edit, Trash2, UserPlus, AlertTriangle, CheckCircle, 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertService, ExportService, AlertShareService, CategoryService } from '@/lib/backend-services';
+import { debounce } from '@/lib/performance';
 
 const Dashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -89,6 +90,14 @@ const Dashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Debounced search to improve performance
+  const debouncedSearch = React.useMemo(
+    () => debounce((term: string) => {
+      setSearchTerm(term);
+    }, 300),
+    []
+  );
 
   useEffect(() => {
     let filtered = alerts;
@@ -389,20 +398,21 @@ const Dashboard: React.FC = () => {
             <CardTitle>Security Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="flex-1 min-w-[200px]">
+            <div className="flex flex-col lg:flex-row gap-4 mb-6">
+              <div className="flex-1 min-w-0">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search by rule name, tags, or description..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    defaultValue={searchTerm}
+                    onChange={(e) => debouncedSearch(e.target.value)}
                     className="pl-10"
                   />
                 </div>
               </div>
-              <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                <SelectTrigger className="w-48">
+              <div className="flex flex-wrap gap-2">
+                <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                  <SelectTrigger className="w-40">
                   <SelectValue placeholder="Filter by severity" />
                 </SelectTrigger>
                 <SelectContent>
@@ -412,7 +422,7 @@ const Dashboard: React.FC = () => {
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
-              </Select>
+                </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Status" />
@@ -447,17 +457,18 @@ const Dashboard: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={assignedFilter} onValueChange={setAssignedFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Assignment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  <SelectItem value="assigned_to_me">Assigned to Me</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Assignment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="assigned">Assigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    <SelectItem value="assigned_to_me">Assigned to Me</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Export Controls */}
