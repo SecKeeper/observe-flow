@@ -15,9 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { AlertFormData, Severity } from '@/types';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload, Calendar, Clock, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { AlertService, CategoryService, StorageService } from '@/lib/backend-services';
 
 const AlertForm: React.FC = () => {
   const navigate = useNavigate();
@@ -42,24 +43,47 @@ const AlertForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (isEditing) {
-      fetchAlert();
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      // Fetch categories
+      const categoriesData = await CategoryService.getCategories();
+      setCategories(categoriesData || []);
+
+      // Fetch user profile for role-based access
+      if (user) {
+        const profile = await AlertService.getUserProfile(user.id);
+        setUserProfile(profile);
+      }
+
+      // Fetch alert data if editing
+      if (isEditing && id) {
+        await fetchAlert();
+      }
+    } catch (error: any) {
+      console.error('Error fetching initial data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to load initial data",
+      });
+    } finally {
+      setInitialLoading(false);
     }
-  }, [isEditing, id]);
+  };
 
   const fetchAlert = async () => {
     if (!id) return;
 
     try {
-      const { data: alert, error } = await supabase
-        .from('alerts')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
+      const alert = await AlertService.getAlert(id);
 
       if (alert) {
         setFormData({
@@ -73,17 +97,20 @@ const AlertForm: React.FC = () => {
           severity: alert.severity as Severity,
           tags: alert.tags?.join(', ') || '',
           external_url: alert.external_url || '',
+          category: alert.category || '',
+          priority: alert.priority || 'medium',
+          due_date: alert.due_date ? new Date(alert.due_date).toISOString().split('T')[0] : '',
+          source: alert.source || '',
+          confidence_score: alert.confidence_score || 0,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching alert:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load alert data",
+        description: error.message || "Failed to load alert data",
       });
-    } finally {
-      setInitialLoading(false);
     }
   };
 
@@ -98,28 +125,52 @@ const AlertForm: React.FC = () => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       // Validate file type and size
-      const validTypes = ['.pcap', '.pcapng', '.txt', '.pdf', '.doc', '.docx'];
+      const validTypes = ['.pcap', '.pcapng', '.txt', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
       const fileExtension = selectedFile.name.toLowerCase().substring(selectedFile.name.lastIndexOf('.'));
       
       if (!validTypes.some(type => fileExtension.endsWith(type.substring(1)))) {
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: "Please upload a valid file type (.pcap, .txt, .pdf, .doc, .docx)",
+          description: "Please upload a valid file type (.pcap, .txt, .pdf, .doc, .docx, .jpg, .png)",
         });
         return;
       }
 
-      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
+      if (selectedFile.size > 50 * 1024 * 1024) { // 50MB limit
         toast({
           variant: "destructive",
           title: "File too large",
-          description: "File size must be less than 10MB",
+          description: "File size must be less than 50MB",
         });
         return;
       }
 
       setFile(selectedFile);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!file) return null;
+
+    setUploading(true);
+    try {
+      const fileUrl = await StorageService.uploadAlertFile(file);
+      toast({
+        title: "File uploaded",
+        description: "File uploaded successfully",
+      });
+      return fileUrl;
+    } catch (error: any) {
+      console.error('File upload failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: error.message || "Failed to upload file",
+      });
+      return null;
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -135,6 +186,12 @@ const AlertForm: React.FC = () => {
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
+      // Upload file if selected
+      let fileUrl = null;
+      if (file) {
+        fileUrl = await handleFileUpload();
+      }
+
       const alertData = {
         dashboard_id: 'default-dashboard',
         rule_name: formData.rule_name,
@@ -147,24 +204,21 @@ const AlertForm: React.FC = () => {
         severity: formData.severity,
         tags: tagsArray,
         external_url: formData.external_url,
+        category: formData.category,
+        priority: formData.priority,
+        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+        source: formData.source,
+        confidence_score: formData.confidence_score,
+        attached_file: fileUrl,
         is_active: true,
         is_in_progress: false,
         created_by: user.id
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('alerts')
-          .update(alertData)
-          .eq('id', id);
-
-        if (error) throw error;
+        await AlertService.updateAlert(id, alertData);
       } else {
-        const { error } = await supabase
-          .from('alerts')
-          .insert([alertData]);
-
-        if (error) throw error;
+        await AlertService.createAlert(alertData);
       }
 
       toast({
@@ -237,6 +291,39 @@ const AlertForm: React.FC = () => {
                       <SelectItem value="Medium">Medium</SelectItem>
                       <SelectItem value="High">High</SelectItem>
                       <SelectItem value="Critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={formData.category || ''} onValueChange={(value) => handleInputChange('category', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select value={formData.priority || 'medium'} onValueChange={(value) => handleInputChange('priority', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -316,6 +403,44 @@ const AlertForm: React.FC = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="source">Source</Label>
+                  <Input
+                    id="source"
+                    value={formData.source || ''}
+                    onChange={(e) => handleInputChange('source', e.target.value)}
+                    placeholder="Alert source (e.g., SIEM, IDS, Manual)"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confidence_score">Confidence Score</Label>
+                  <Input
+                    id="confidence_score"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.confidence_score || 0}
+                    onChange={(e) => handleInputChange('confidence_score', e.target.value)}
+                    placeholder="0-100"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="due_date">Due Date</Label>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={formData.due_date || ''}
+                    onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="tags">Tags</Label>
                 <Input
@@ -346,17 +471,23 @@ const AlertForm: React.FC = () => {
                     id="file"
                     type="file"
                     onChange={handleFileChange}
-                    accept=".pcap,.pcapng,.txt,.pdf,.doc,.docx"
+                    accept=".pcap,.pcapng,.txt,.pdf,.doc,.docx,.jpg,.jpeg,.png"
                     className="flex-1"
+                    disabled={uploading}
                   />
                   <Upload className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Upload PCAPs, documents, or reference files (max 10MB)
+                  Upload PCAPs, documents, or reference files (max 50MB)
                 </p>
                 {file && (
                   <p className="text-sm text-primary">
                     Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+                {uploading && (
+                  <p className="text-sm text-blue-500">
+                    Uploading file...
                   </p>
                 )}
               </div>
@@ -369,7 +500,7 @@ const AlertForm: React.FC = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading || uploading}>
                   {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Alert' : 'Create Alert')}
                 </Button>
               </div>
