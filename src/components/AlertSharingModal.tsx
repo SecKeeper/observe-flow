@@ -51,9 +51,9 @@ const AlertSharingModal: React.FC<AlertSharingModalProps> = ({
     try {
       const share = await AlertShareService.createShare({
         alert_id: alertId,
-        expires_at: shareData.expires_at,
+        shared_with_email: shareData.email_invites[0] || '',
         access_type: shareData.access_type,
-        email_invites: shareData.email_invites,
+        expires_in_hours: Math.round((shareData.expires_at.getTime() - Date.now()) / (1000 * 60 * 60))
       });
 
       setShareLink(share.share_link);

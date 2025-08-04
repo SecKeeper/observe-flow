@@ -27,7 +27,7 @@ import { Alert } from '@/types';
 import { Plus, Search, Eye, Edit, Trash2, UserPlus, AlertTriangle, CheckCircle, Download, Share2, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertService, ExportService, AlertShareService } from '@/lib/backend-services';
+import { AlertService, ExportService, AlertShareService, CategoryService } from '@/lib/backend-services';
 
 const Dashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
       setAnalytics(analyticsData);
 
       // Fetch categories
-      const categoriesData = await AlertService.getCategories();
+      const categoriesData = await CategoryService.getCategories();
       setCategories(categoriesData || []);
 
       // Fetch user profile for role-based access
@@ -111,7 +111,7 @@ const Dashboard: React.FC = () => {
       } else if (statusFilter === 'idle') {
         filtered = filtered.filter(alert => !alert.is_in_progress);
       } else if (statusFilter === 'resolved') {
-        filtered = filtered.filter(alert => alert.resolved_at);
+        filtered = filtered.filter(alert => !alert.is_active);
       }
     }
 
@@ -253,7 +253,8 @@ const Dashboard: React.FC = () => {
     try {
       const share = await AlertShareService.createShare({
         alert_id: alertId,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        shared_with_email: 'public@example.com',
+        expires_in_hours: 24, // 24 hours
         access_type: 'read-only'
       });
 

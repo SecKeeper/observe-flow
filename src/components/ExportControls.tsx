@@ -166,7 +166,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
       fields: Object.keys(prev.fields).reduce((acc, field) => ({
         ...acc,
         [field]: true,
-      }), {}),
+      }), {} as typeof prev.fields),
     }));
   };
 
@@ -176,7 +176,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
       fields: Object.keys(prev.fields).reduce((acc, field) => ({
         ...acc,
         [field]: false,
-      }), {}),
+      }), {} as typeof prev.fields),
     }));
   };
 

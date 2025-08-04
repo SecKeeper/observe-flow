@@ -155,7 +155,8 @@ const AlertForm: React.FC = () => {
 
     setUploading(true);
     try {
-      const fileUrl = await StorageService.uploadAlertFile(file);
+      const result = await StorageService.uploadAlertFile(file, 'temp-id');
+      const fileUrl = result.file_url;
       toast({
         title: "File uploaded",
         description: "File uploaded successfully",

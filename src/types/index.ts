@@ -55,6 +55,14 @@ export interface Alert {
   created_by: string;
   created_at: string;
   updated_at: string;
+  category?: string;
+  priority?: string;
+  due_date?: string;
+  source?: string;
+  confidence_score?: number;
+  // Additional relations from backend
+  created_by_profile?: any;
+  assigned_to_profile?: any;
 }
 
 export interface AlertFormData {
@@ -69,4 +77,9 @@ export interface AlertFormData {
   tags: string;
   file?: File;
   external_url?: string;
+  category?: string;
+  priority?: string;
+  due_date?: string;
+  source?: string;
+  confidence_score?: number;
 }

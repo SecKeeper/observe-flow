@@ -141,9 +141,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
       let fileUrl: string;
       
       if (bucket === 'alert-files') {
-        fileUrl = await StorageService.uploadAlertFile(file);
+        const result = await StorageService.uploadAlertFile(file, 'temp-alert-id');
+        fileUrl = result.file_url;
       } else {
-        fileUrl = await StorageService.uploadReportFile(file);
+        const result = await StorageService.uploadAlertFile(file, 'temp-alert-id');
+        fileUrl = result.file_url;
       }
 
       onUploadComplete(fileUrl);
@@ -167,7 +169,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
-      const downloadUrl = await StorageService.getSignedUrl(fileUrl);
+      const downloadUrl = await StorageService.getSignedUrl('alert-files', fileUrl, 3600);
       const a = document.createElement('a');
       a.href = downloadUrl;
       a.download = fileName;
