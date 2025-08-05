@@ -192,10 +192,13 @@ export type Database = {
         Row: {
           assigned_to: string | null
           attached_file: string | null
+          category: string | null
+          confidence_score: number | null
           created_at: string
           created_by: string
           dashboard_id: string
           description: string
+          due_date: string | null
           external_url: string | null
           false_positive_check: string
           file_url: string | null
@@ -205,20 +208,25 @@ export type Database = {
           is_active: boolean
           is_in_progress: boolean
           mitigation: string
+          priority: string | null
           rule_name: string
           search_vector: unknown | null
           severity: string
           short_description: string
+          source: string | null
           tags: string[] | null
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
           attached_file?: string | null
+          category?: string | null
+          confidence_score?: number | null
           created_at?: string
           created_by: string
           dashboard_id: string
           description: string
+          due_date?: string | null
           external_url?: string | null
           false_positive_check: string
           file_url?: string | null
@@ -228,20 +236,25 @@ export type Database = {
           is_active?: boolean
           is_in_progress?: boolean
           mitigation: string
+          priority?: string | null
           rule_name: string
           search_vector?: unknown | null
           severity: string
           short_description: string
+          source?: string | null
           tags?: string[] | null
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
           attached_file?: string | null
+          category?: string | null
+          confidence_score?: number | null
           created_at?: string
           created_by?: string
           dashboard_id?: string
           description?: string
+          due_date?: string | null
           external_url?: string | null
           false_positive_check?: string
           file_url?: string | null
@@ -251,10 +264,12 @@ export type Database = {
           is_active?: boolean
           is_in_progress?: boolean
           mitigation?: string
+          priority?: string | null
           rule_name?: string
           search_vector?: unknown | null
           severity?: string
           short_description?: string
+          source?: string | null
           tags?: string[] | null
           updated_at?: string
         }
