@@ -10,7 +10,7 @@ import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const success = await login(formData.username, formData.password);
+      const success = await login(formData.email, formData.password);
       
       if (success) {
         toast({
@@ -43,7 +43,7 @@ const Login: React.FC = () => {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: "Invalid username or password.",
+          description: "Invalid email or password.",
         });
       }
     } catch (error) {
@@ -84,15 +84,15 @@ const Login: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   required
-                  placeholder="Enter your username"
-                  autoComplete="username"
+                  placeholder="Enter your email"
+                  autoComplete="email"
                 />
               </div>
 
@@ -170,7 +170,7 @@ const Login: React.FC = () => {
               <div className="text-sm">
                 <p className="font-medium text-info">Demo Mode</p>
                 <p className="text-info/80 mt-1">
-                  This is a demo version. Any username and password combination will work for testing.
+                  This is a demo version. Any email and password combination will work for testing.
                 </p>
               </div>
             </div>

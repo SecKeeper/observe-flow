@@ -69,7 +69,7 @@ const Register: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const success = await register(username, password, confirmPassword);
+      const success = await register(email, password, username);
       if (success) {
         toast({
           title: "Registration successful",
