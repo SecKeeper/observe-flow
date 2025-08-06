@@ -194,7 +194,7 @@ const AlertForm: React.FC = () => {
       }
 
       const alertData = {
-        dashboard_id: 'default-dashboard',
+        dashboard_id: '00000000-0000-0000-0000-000000000001',
         rule_name: formData.rule_name,
         short_description: formData.short_description,
         description: formData.description,
