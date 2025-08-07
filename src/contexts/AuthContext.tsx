@@ -35,8 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthContext: Setting up auth listeners');
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthContext: Initial session check', session?.user?.id);
       if (session?.user) {
         setSupabaseUser(session.user);
         loadUserProfile(session.user.id);
@@ -46,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: Auth state change', event, session?.user?.id);
       if (session?.user) {
         setSupabaseUser(session.user);
         await loadUserProfile(session.user.id);
@@ -60,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loadUserProfile = async (userId: string) => {
+    console.log('AuthContext: Loading profile for user', userId);
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -67,12 +72,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('AuthContext: Profile query result', { profile, error });
+
       if (error) {
         console.error('Error loading profile:', error);
         return;
       }
 
       if (profile) {
+        console.log('AuthContext: Setting user from profile', profile);
         setUser({
           id: profile.user_id,
           username: profile.username,
@@ -80,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: profile.role,
         });
       } else {
+        console.log('AuthContext: No profile found, using fallback');
         // If no profile exists, set user with basic info from Supabase user
         setUser({
           id: userId,
@@ -94,11 +103,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    console.log('AuthContext: Login attempt for', email);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      console.log('AuthContext: Login response', { user: data.user?.id, error });
 
       if (error) {
         console.error('Login error:', error);
