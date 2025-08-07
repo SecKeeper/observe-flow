@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading profile:', error);
@@ -78,6 +78,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: profile.username,
           email: profile.email,
           role: profile.role,
+        });
+      } else {
+        // If no profile exists, set user with basic info from Supabase user
+        setUser({
+          id: userId,
+          username: 'User',
+          email: '',
+          role: 'user',
         });
       }
     } catch (error) {
