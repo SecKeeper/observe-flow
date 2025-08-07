@@ -94,13 +94,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Login error:', error);
-        return false;
+        // Throw the error so the component can handle it
+        throw error;
       }
 
       return !!data.user;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      throw error;
     }
   };
 

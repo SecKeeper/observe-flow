@@ -39,18 +39,20 @@ const Login: React.FC = () => {
           description: "Welcome to AlertFlow!",
         });
         navigate('/dashboard');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Invalid email or password.",
-        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "An error occurred during login.";
+      
+      if (error?.message === "Email not confirmed") {
+        errorMessage = "Please check your email and click the confirmation link before logging in.";
+      } else if (error?.message === "Invalid login credentials") {
+        errorMessage = "Invalid email or password.";
+      }
+      
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "An error occurred during login.",
+        title: "Login failed",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
